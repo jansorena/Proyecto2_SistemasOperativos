@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <semaphore.h>
 #include <pthread.h>
+#include <string>
 
 using namespace std;
 
@@ -17,6 +18,50 @@ queue <Genoma> colaVC;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
+void leer_genoma(string archivo) {
+	string filePath = archivo;
+
+    // Open the file
+    ifstream inputFile(filePath);
+	cout << "archivo a leer: "<< archivo << endl;
+    // Check if the file is opened successfully
+    if (!inputFile.is_open()) {
+        cerr << "Error opening file: " << filePath << endl;
+		cerr << "Error code: " << strerror(errno) << endl;
+        return;
+    }
+
+    // Variables to store counts
+    int countC = 0;
+    int countG = 0;
+
+    // Read the file line by line
+    string line;
+    while (getline(inputFile, line)) {
+        // Check if the line starts with '>'
+        if (line[0] == '>') {
+            // Ignore this line
+            continue;
+        }
+
+        // Iterate through the characters in the line
+        for (char currentChar : line) {
+            // Check if the character is 'C' or 'G' and update counts
+            if (currentChar == 'C') {
+                countC++;
+            } else if (currentChar == 'G') {
+                countG++;
+            }
+        }
+    }
+
+    // Close the file
+    inputFile.close();
+
+    // Output the results
+    cout << "Count of C: " << countC << endl;
+    cout << "Count of G: " << countG << endl;
+}
 
 int main(int argc, char const *argv[]){
 	if(argc != 3){
@@ -39,8 +84,10 @@ int main(int argc, char const *argv[]){
 	    return EXIT_FAILURE;
 	}
 
-  	for (auto file : files) cout << file << "| ";
-  	cout << endl;
+  	for (auto file : files) cout << file << endl;
+	cout << endl;
+	
+  	leer_genoma("GCF_000629185.1_Pseu_aeru_3580_V1_genomic.fna");
 
 	/*ifstream gen(directorio);
 	if(!gen.is_open()){
