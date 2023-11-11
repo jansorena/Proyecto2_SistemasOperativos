@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <semaphore.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <string>
 
 using namespace std;
@@ -12,11 +13,11 @@ struct Genoma{
 };
 
 queue <Genoma> colaSem;
-sem_t sem_genoma;
+sem_t semGenoma;
 
 queue <Genoma> colaVC;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t mutexGenoma;
+pthread_cond_t condGenoma;
 
 void leer_genoma(string archivo) {
 	string filePath = archivo;
@@ -34,6 +35,7 @@ void leer_genoma(string archivo) {
     // Variables to store counts
     int countC = 0;
     int countG = 0;
+    int countCGAT = 0;
 
     // Read the file line by line
     string line;
@@ -53,6 +55,7 @@ void leer_genoma(string archivo) {
                 countG++;
             }
         }
+        countCGAT += line.size();
     }
 
     // Close the file
@@ -61,6 +64,7 @@ void leer_genoma(string archivo) {
     // Output the results
     cout << "Count of C: " << countC << endl;
     cout << "Count of G: " << countG << endl;
+    cout << "Cantidad de bases nitrogenadas: " << countCGAT << endl;
 }
 
 int main(int argc, char const *argv[]){
@@ -86,9 +90,11 @@ int main(int argc, char const *argv[]){
 
   	for (auto file : files) cout << file << endl;
 	cout << endl;
-	
-  	leer_genoma("GCF_000629185.1_Pseu_aeru_3580_V1_genomic.fna");
-
+	sem_init(&semGenoma, 0, 1);
+  	leer_genoma("www.inf.udec.cl/~chernand/datalabs/genomas/GCF_000629185.1_Pseu_aeru_3580_V1_genomic.fna");
+  	pthread_mutex_init(&mutexGenoma, NULL);
+  	pthread_cond_init(&condGenoma, NULL);
+  	leer_genoma("www.inf.udec.cl/~chernand/datalabs/genomas/GCF_000629185.1_Pseu_aeru_3580_V1_genomic.fna");  	
 	/*ifstream gen(directorio);
 	if(!gen.is_open()){
 		cout << "Error al abrir " << directorio << endl;
