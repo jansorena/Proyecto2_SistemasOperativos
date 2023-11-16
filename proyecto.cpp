@@ -13,46 +13,30 @@ std::counting_semaphore<1> sem(1);
 queue<string> colaGenomas;
 
 void leer_genoma_semaforo(string archivo, float umbral) {
-	
     string filePath = archivo;
-
-    // Open the file
-    ifstream inputFile(filePath);
+    ifstream inputFile(filePath); // Abrir el archivo
 	//cout << "archivo a leer: "<< archivo << endl;
-    // Check if the file is opened successfully
     if (!inputFile.is_open()) {
-        cerr << "Error opening file: " << filePath << endl;
-		cerr << "Error code: " << strerror(errno) << endl;
+        cerr << "Error al abrir el archivo: " << filePath << endl;
+		cerr << strerror(errno) << endl;
         return;
     }
-
-    // Variables to store counts
+    // Variables to guardar CGAT
     int countC = 0;
     int countG = 0;
     int countCGAT = 0;
 
-    // Read the file line by line
+    // Leer el archivo linea por linea
     string line;
     while (getline(inputFile, line)) {
-        // Check if the line starts with '>'
-        if (line[0] == '>') {
-            // Ignore this line
-            continue;
-        }
-        // Iterate through the characters in the line
+        if (line[0] == '>') continue; // Saltar las lineas que empiezan con '>'
         for (char currentChar : line) {
-            // Check if the character is 'C' or 'G' and update counts
-            if (currentChar == 'C') {
-                countC++;
-            } else if (currentChar == 'G') {
-                countG++;
-            }
+            if (currentChar == 'C') countC++;
+            else if (currentChar == 'G') countG++;
         }
         countCGAT += line.size();
     }
-
-    // Cierra el archivo
-    inputFile.close();
+    inputFile.close(); // Cierra el archivo
 
     float calculoCG = float(countC+countG)/float(countCGAT);
     const float epsilon = 1e-6; 
@@ -74,7 +58,6 @@ int main(int argc, char const *argv[]){
 		cout << "Fallo en ingreso de parametros" << endl;
 		exit(EXIT_FAILURE);
 	}
-
     float umbral = atof(argv[2]);
 	char* directorio;
 	DIR *dir;
@@ -93,20 +76,14 @@ int main(int argc, char const *argv[]){
         perror("opendir");
         return EXIT_FAILURE;
     }
-
     int genomaSize = genomas.size();
     vector <thread> threads;
-
     for(int i = 0; i < genomaSize; i++){
         //cout << genomas[i] << endl;
-        threads.emplace_back(leer_genoma_semaforo, genomas[i],umbral);
+        threads.emplace_back(leer_genoma_semaforo, genomas[i], umbral);
     }
-
     for(auto &t : threads){
 		t.join();
 	}
-    
-    
-
     return 0;
 }
