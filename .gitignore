@@ -1,1 +1,3 @@
 genomas/*
+.vscode
+*.out
