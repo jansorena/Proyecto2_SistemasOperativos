@@ -53,6 +53,28 @@ void leer_genoma_semaforo(string archivo, float umbral) {
     }
 }
 
+void leerDirectorio(string directorio, vector<string> &genomas) {
+	DIR *dir;
+	struct dirent *diread;
+	if ((dir = opendir(directorio.c_str())) != NULL) {
+        while ((diread = readdir(dir)) != NULL) {
+            // Filtra las entradas "." y ".."
+            if (diread->d_name != string(".") && diread->d_name != string("..") && diread->d_type == DT_REG) {
+                string s = diread->d_name;
+                genomas.push_back(string(directorio) + "/" + s);
+            } else if (diread->d_type == DT_DIR && diread->d_name != string(".") && diread->d_name != string("..")) {
+				cout << "directorios: " << diread->d_name << endl;
+				string subDirPath = directorio + "/" + diread->d_name;
+                leerDirectorio(subDirPath, genomas);
+			}
+        }
+        closedir(dir);
+    } else {
+        perror("opendir");
+        return;
+    }
+}
+
 int main(int argc, char const *argv[]){
     if(argc != 3){
 		cout << "Fallo en ingreso de parametros" << endl;
@@ -60,22 +82,10 @@ int main(int argc, char const *argv[]){
 	}
     float umbral = atof(argv[2]);
 	char* directorio;
-	DIR *dir;
-  	struct dirent *diread;
     vector<string> genomas;
-    if ((dir = opendir(argv[1])) != nullptr) {
-        while ((diread = readdir(dir)) != nullptr) {
-            // Filtra las entradas "." y ".."
-            if (diread->d_name != string(".") && diread->d_name != string("..")) {
-                string s = diread->d_name;
-                genomas.push_back(string(argv[1]) + "/" + s);
-            }
-        }
-        closedir(dir);
-    } else {
-        perror("opendir");
-        return EXIT_FAILURE;
-    }
+	
+    leerDirectorio(string(argv[1]),genomas);
+	
     int genomaSize = genomas.size();
     vector <thread> threads;
     for(int i = 0; i < genomaSize; i++){
@@ -87,3 +97,4 @@ int main(int argc, char const *argv[]){
 	}
     return 0;
 }
+
