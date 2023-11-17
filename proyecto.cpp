@@ -1,3 +1,4 @@
+#include <condition_variable>
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -7,20 +8,27 @@
 #include <semaphore>
 #include <dirent.h>
 #include <queue>
+#include <mutex>
+#include <condition_variable>
 
 using namespace std;
+#define epsilon 1e-6
+
+// Variables Globales
 std::counting_semaphore<1> sem(1);
 queue<string> colaGenomas;
+mutex mtx;
+condition_variable cv;
 
-void leer_genoma_semaforo(string archivo, float umbral) {
-    string filePath = archivo;
-    ifstream inputFile(filePath); // Abrir el archivo
-	//cout << "archivo a leer: "<< archivo << endl;
+float calcularCG(string fileName){
+    ifstream inputFile(fileName);
+	
     if (!inputFile.is_open()) {
-        cerr << "Error al abrir el archivo: " << filePath << endl;
+        cerr << "Error al abrir el archivo: " << fileName << endl;
 		cerr << strerror(errno) << endl;
-        return;
+        return 1;
     }
+
     // Variables to guardar CGAT
     int countC = 0;
     int countG = 0;
@@ -30,27 +38,18 @@ void leer_genoma_semaforo(string archivo, float umbral) {
     string line;
     while (getline(inputFile, line)) {
         if (line[0] == '>') continue; // Saltar las lineas que empiezan con '>'
+
         for (char currentChar : line) {
             if (currentChar == 'C') countC++;
             else if (currentChar == 'G') countG++;
         }
+
         countCGAT += line.size();
     }
+
     inputFile.close(); // Cierra el archivo
 
-    float calculoCG = float(countC+countG)/float(countCGAT);
-    const float epsilon = 1e-6; 
-    if (calculoCG - umbral < -epsilon) {
-        cout << archivo << ": no entra" << endl;
-    } else{ // mayor o igual
-        sem.acquire();
-        colaGenomas.push(archivo);
-        cout << archivo << " % CG: " << calculoCG << endl;
-        //cout << "Count of C: " << countC << endl;
-        //cout << "Count of G: " << countG << endl;
-        //cout << "Cantidad de bases nitrogenadas: " << countCGAT << endl;
-        sem.release();
-    }
+    return float(countC+countG)/float(countCGAT);
 }
 
 void leerDirectorio(string directorio, vector<string> &genomas) {
@@ -75,6 +74,35 @@ void leerDirectorio(string directorio, vector<string> &genomas) {
     }
 }
 
+void leer_genoma_semaforo(string archivo, float umbral) {
+    float CG_ratio = calcularCG(archivo);
+
+    if (CG_ratio - umbral < -epsilon) {
+        cout << archivo << ": no entra" << endl;
+        return;
+    } 
+
+    sem.acquire();
+    colaGenomas.push(archivo);
+    cout << archivo << " % CG: " << CG_ratio << endl;
+    sem.release();
+    
+}
+
+void leer_genoma_mutex_cv(string archivo, float umbral){
+    float CG_ratio = calcularCG(archivo);
+
+    if (CG_ratio - umbral < -epsilon) {
+        cout << archivo << ": no entra" << endl;
+        return;
+    } 
+
+    unique_lock<mutex> lck(mtx);
+    colaGenomas.push(archivo);
+    cout << archivo << " % CG: " << CG_ratio << endl;
+    cv.notify_one();
+}
+
 int main(int argc, char const *argv[]){
     if(argc != 3){
 		cout << "Fallo en ingreso de parametros" << endl;
@@ -91,6 +119,7 @@ int main(int argc, char const *argv[]){
     for(int i = 0; i < genomaSize; i++){
         //cout << genomas[i] << endl;
         threads.emplace_back(leer_genoma_semaforo, genomas[i], umbral);
+        //threads.emplace_back(leer_genoma_mutex_cv, genomas[i], umbral);
     }
     for(auto &t : threads){
 		t.join();
