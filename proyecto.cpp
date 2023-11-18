@@ -29,7 +29,7 @@ float calcularCG(string fileName){
         return 1;
     }
 
-    // Variables to guardar CGAT
+    // Variables para guardar bases nitrogenadas
     int countC = 0;
     int countG = 0;
     int countCGAT = 0;
