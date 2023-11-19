@@ -12,7 +12,7 @@ using namespace std;
 #define epsilon 1e-6
 
 float calcularCG(string fileName);
-void leerDirectorio(string directorio, vector<string> &genomas);
+void leerDirectorio(string directorio, vector<pair<string,string>> &genomas);
 
 class ColaCompartidaMutex {
 private:
@@ -24,8 +24,8 @@ public:
     ColaCompartidaMutex() {}
     ~ColaCompartidaMutex() {}
 
-    void pushGenoma(string archivo, float umbral){
-        float CG_ratio = calcularCG(archivo);
+    void pushGenoma(string directorio, string archivo, float umbral){
+        float CG_ratio = calcularCG(directorio+archivo);
 
         if (CG_ratio - umbral < -epsilon) {
             return;
@@ -65,8 +65,8 @@ public:
     ColaCompartidaSemaforo() : sem(1){}
     ~ColaCompartidaSemaforo() {}
 
-    void pushGenoma(string archivo, float umbral){
-        float CG_ratio = calcularCG(archivo);
+    void pushGenoma(string directorio, string archivo, float umbral){
+        float CG_ratio = calcularCG(directorio+archivo);
 
         if (CG_ratio - umbral < -epsilon) {
             return;
@@ -101,17 +101,18 @@ int main(int argc, char const *argv[]){
 	}
     float umbral = atof(argv[2]);
 	char* directorio;
-    vector<string> genomas;
+    vector<pair<string,string>> genomas;
 
     leerDirectorio(string(argv[1]), genomas);
 
     int genomaSize = genomas.size();
-    /*****************************************************************************************
+    /*****************************************************************************************/
+    cout << "Cola Compartida Mutex" << endl;
     ColaCompartidaMutex ccm;
     thread printThreadMut(&ColaCompartidaMutex::printGenoma, &ccm);
     vector<thread> threads_ccm;
     for (int i = 0; i < genomaSize; i++) {
-        threads_ccm.emplace_back(&ColaCompartidaMutex::pushGenoma, &ccm, genomas[i], umbral);
+        threads_ccm.emplace_back(&ColaCompartidaMutex::pushGenoma, &ccm, genomas[i].first,genomas[i].second, umbral);
     }
 
     for (auto& t : threads_ccm) {
@@ -121,12 +122,13 @@ int main(int argc, char const *argv[]){
     ccm.terminar();
     printThreadMut.join();
    
-    *****************************************************************************************/
+    /*****************************************************************************************/
+    cout << "Cola Compartida Semaforo" << endl;
     ColaCompartidaSemaforo ccs;
     thread printThreadSem(&ColaCompartidaSemaforo::printGenoma, &ccs);
     vector<thread> threads_ccs;
     for (int i = 0; i < genomaSize; i++) {
-        threads_ccs.emplace_back(&ColaCompartidaSemaforo::pushGenoma, &ccs, genomas[i], umbral);
+        threads_ccs.emplace_back(&ColaCompartidaSemaforo::pushGenoma, &ccs, genomas[i].first,genomas[i].second, umbral);
     }
 
     for (auto& t : threads_ccs) {
@@ -135,6 +137,7 @@ int main(int argc, char const *argv[]){
 
     ccs.terminar();
     printThreadSem.join();
+    /*****************************************************************************************/
 
     return 0;
 }
@@ -171,19 +174,15 @@ float calcularCG(string fileName){
     return float(countC+countG)/float(countCGAT);
 }
 
-void leerDirectorio(string directorio, vector<string> &genomas) {
+void leerDirectorio(string directorio, vector<pair<string,string>> &genomas) {
     DIR *dir;
     struct dirent *diread;
     if ((dir = opendir(directorio.c_str())) != NULL) {
-        while ((diread = readdir(dir)) != NULL) {
+        while ((diread = readdir(dir)) != NULL){
             // Filtra las entradas "." y ".."
-            if (diread->d_name != string(".") && diread->d_name != string("..") && diread->d_type == DT_REG) {
+            if (diread->d_name != string(".") && diread->d_name != string("..")) {
                 string s = diread->d_name;
-                genomas.push_back(string(directorio) + "/" + s);
-            } else if (diread->d_type == DT_DIR && diread->d_name != string(".") && diread->d_name != string("..")) {
-                cout << "directorios: " << diread->d_name << endl;
-                string subDirPath = directorio + "/" + diread->d_name;
-                leerDirectorio(subDirPath, genomas);
+                genomas.push_back({directorio + "/",s});
             }
         }
         closedir(dir);
@@ -192,3 +191,10 @@ void leerDirectorio(string directorio, vector<string> &genomas) {
         return;
     }
 }
+
+/*
+g++ programa2.cpp -o programa2
+/usr/bin/time -v ./programa1 > output1.txt 2>&1
+echo "Programa 1:"
+cat output1.txt
+*/
