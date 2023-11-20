@@ -7,6 +7,7 @@
 #include <thread>
 #include <utility>
 #include <semaphore>
+#include <cstring>
 
 using namespace std;
 #define epsilon 1e-6
@@ -107,37 +108,39 @@ int main(int argc, char const *argv[]){
 
     int genomaSize = genomas.size();
     /*****************************************************************************************/
-    cout << "Cola Compartida Mutex" << endl;
-    ColaCompartidaMutex ccm;
-    thread printThreadMut(&ColaCompartidaMutex::printGenoma, &ccm);
-    vector<thread> threads_ccm;
-    for (int i = 0; i < genomaSize; i++) {
-        threads_ccm.emplace_back(&ColaCompartidaMutex::pushGenoma, &ccm, genomas[i].first,genomas[i].second, umbral);
-    }
+    cout << "Ingrese opcion 1 Mutex 2 Semaforo: ";
+    int choice; cin >> choice;
+    if (choice == 1){
+        cout << "Cola Compartida Mutex" << endl;
+        ColaCompartidaMutex ccm;
+        thread printThreadMut(&ColaCompartidaMutex::printGenoma, &ccm);
+        vector<thread> threads_ccm;
+        for (int i = 0; i < genomaSize; i++) {
+            threads_ccm.emplace_back(&ColaCompartidaMutex::pushGenoma, &ccm, genomas[i].first,genomas[i].second, umbral);
+        }
 
-    for (auto& t : threads_ccm) {
-        t.join();
-    }
-    
-    ccm.terminar();
-    printThreadMut.join();
-   
-    /*****************************************************************************************/
-    cout << "Cola Compartida Semaforo" << endl;
-    ColaCompartidaSemaforo ccs;
-    thread printThreadSem(&ColaCompartidaSemaforo::printGenoma, &ccs);
-    vector<thread> threads_ccs;
-    for (int i = 0; i < genomaSize; i++) {
-        threads_ccs.emplace_back(&ColaCompartidaSemaforo::pushGenoma, &ccs, genomas[i].first,genomas[i].second, umbral);
-    }
+        for (auto& t : threads_ccm) {
+            t.join();
+        }
+        
+        ccm.terminar();
+        printThreadMut.join();
+    }else{
+        cout << "Cola Compartida Semaforo" << endl;
+        ColaCompartidaSemaforo ccs;
+        thread printThreadSem(&ColaCompartidaSemaforo::printGenoma, &ccs);
+        vector<thread> threads_ccs;
+        for (int i = 0; i < genomaSize; i++) {
+            threads_ccs.emplace_back(&ColaCompartidaSemaforo::pushGenoma, &ccs, genomas[i].first,genomas[i].second, umbral);
+        }
 
-    for (auto& t : threads_ccs) {
-        t.join();
-    }
+        for (auto& t : threads_ccs) {
+            t.join();
+        }
 
-    ccs.terminar();
-    printThreadSem.join();
-    /*****************************************************************************************/
+        ccs.terminar();
+        printThreadSem.join();
+    }
 
     return 0;
 }
