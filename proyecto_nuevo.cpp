@@ -190,7 +190,7 @@ void leerDirectorio(string directorio, vector<pair<string,string>> &genomas) {
     if ((dir = opendir(directorio.c_str())) != NULL) {
         while ((diread = readdir(dir)) != NULL){
             // Filtra las entradas "." y ".."
-            if (diread->d_name != string(".") && diread->d_name != string("..")) {
+            if (diread->d_name != string(".") && diread->d_name != string("..") && diread->d_type == DT_REG) {
                 string s = diread->d_name;
                 genomas.push_back({directorio + "/",s});
             }
