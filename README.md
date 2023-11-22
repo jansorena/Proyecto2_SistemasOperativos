@@ -11,5 +11,5 @@ Y ejecutar con:
 
 	$ /usr/bin/time -v ./proyecto.out [directorio] [umbral]
 
- En donde "directorio" corresponde a alguno de los directorios con genomas (genomas, bacterias, invertebrate, sample) y "umbral" corresponde a un float entre 0 y 1.
+ En donde "directorio" corresponde a alguno de los directorios con genomas (genomas, bacterias, invertebrate, sample) y "umbral" corresponde a un float entre 0 y 1, el cual representa el umbral del contenido genético CG.
  
