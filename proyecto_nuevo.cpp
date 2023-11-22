@@ -195,7 +195,7 @@ void leerDirectorio(string directorio, vector<pair<string,string>> &genomas) {
         closedir(dir);
     } else {
         perror("opendir");
-        return;
+        exit(1);
     }
 }
 
