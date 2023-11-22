@@ -99,8 +99,12 @@ int main(int argc, char const *argv[]){
     if(argc != 3){
 		cout << "Fallo en ingreso de parametros" << endl;
 		exit(EXIT_FAILURE);
-	}
+    }
     float umbral = atof(argv[2]);
+    if( 0 > umbral || umbral > 1){
+        cout << "Error: Umbral invalido" << endl;
+        exit(EXIT_FAILURE);
+    }
 	char* directorio;
     vector<pair<string,string>> genomas;
 
@@ -108,7 +112,7 @@ int main(int argc, char const *argv[]){
 
     int genomaSize = genomas.size();
     /*****************************************************************************************/
-    cout << "Ingrese opcion 1 Mutex 2 Semaforo: ";
+    cout << "Ingrese opcion, 1: Mutex, 2: Semaforo: ";
     int choice; cin >> choice;
     if (choice == 1){
         cout << "Cola Compartida Mutex" << endl;
