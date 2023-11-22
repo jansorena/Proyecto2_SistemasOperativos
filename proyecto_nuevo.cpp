@@ -129,7 +129,7 @@ int main(int argc, char const *argv[]){
         
         ccm.terminar();
         printThreadMut.join();
-    }else{
+    }else if (choice == 2){
         cout << "Cola Compartida Semaforo" << endl;
         ColaCompartidaSemaforo ccs;
         thread printThreadSem(&ColaCompartidaSemaforo::printGenoma, &ccs);
@@ -144,6 +144,9 @@ int main(int argc, char const *argv[]){
 
         ccs.terminar();
         printThreadSem.join();
+    }else{
+        cout << "Error: opcion invalida" << endl;
+        exit(EXIT_FAILURE);
     }
 
     return 0;
