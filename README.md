@@ -1,4 +1,4 @@
-# Proyecto2_SistemasOperativos
+# Sincronización de Hebras
 
 Para compilar el código, se debe realizar make en el directorio correspondiente:
 
